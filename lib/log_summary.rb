@@ -2,14 +2,13 @@
 
 class LogSummary
   # readers solely used for test purposes uncomment if testing
-  # attr_reader :store, :total_visits, :unique_views
+  attr_reader :store, :total_visits, :unique_views
 
   def initialize(attributes = {})
     @store = {}
     @file = attributes[:file]
     @total_visits = {}
     @unique_views = {}
-    @csv = true
     create_store unless @file.nil?
   end
 
@@ -28,6 +27,26 @@ class LogSummary
     end
   end
 
+  def results_total_views
+    # iterates over each key in store then iterates throuogh nested hashes
+    # to sum the number of visits per page
+    @store.each do |key, val|
+      counter = 0
+      val.each { |_k, v| counter += v }
+      @total_visits[key] = counter
+    end
+    @total_visits = hash_sort(@total_visits)
+  end
+
+  def results_unique_views
+    # iterates over each key in store and counts nested keys to get
+    # unique visits by ip
+    @store.each do |key, val|
+      @unique_views[key] = val.keys.length
+    end
+    @unique_views = hash_sort(@unique_views)
+  end
+
   # next 2 methods are for calling a display output to terminal
   def display_totals
     puts 'Total Visits Per Page'
@@ -38,7 +57,6 @@ class LogSummary
   def display_views
     puts 'Unique Views On Each Page'
     results_generator(@unique_views, 'unique views')
-    generate_csv(@unique_views)
   end
 
   private
@@ -64,26 +82,6 @@ class LogSummary
   def hash_sort(hash_arg)
     # to build the hashes ordered with most visits first
     hash_arg.sort_by { |_k, v| v }.reverse.to_h
-  end
-
-  def results_total_views
-    # iterates over each key in store then iterates throuogh nested hashes
-    # to sum the number of visits per page
-    @store.each do |key, val|
-      counter = 0
-      val.each { |_k, v| counter += v }
-      @total_visits[key] = counter
-    end
-    @total_visits = hash_sort(@total_visits)
-  end
-
-  def results_unique_views
-    # iterates over each key in store and counts nested keys to get
-    # unique visits by ip
-    @store.each do |key, val|
-      @unique_views[key] = val.keys.length
-    end
-    @unique_views = hash_sort(@unique_views)
   end
 
   def results_generator(result, message)
