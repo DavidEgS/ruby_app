@@ -1,4 +1,5 @@
 # class to hold and logic the file
+require 'csv'
 
 class LogSummary
   # readers solely used for test purposes uncomment if testing
@@ -9,6 +10,7 @@ class LogSummary
     @file = attributes[:file]
     @total_visits = {}
     @unique_views = {}
+    @csv = attributes[:csv]
     create_store unless @file.nil?
   end
 
@@ -48,15 +50,20 @@ class LogSummary
   end
 
   # next 2 methods are for calling a display output to terminal
+  # both generate csv if option selected at teh app call
   def display_totals
+    message = 'visits'
     puts 'Total Visits Per Page'
-    results_generator(@total_visits, 'visits')
+    results_generator(@total_visits, message)
     puts '------'
+    generate_csv(@total_visits, message) if @csv
   end
 
   def display_views
     puts 'Unique Views On Each Page'
-    results_generator(@unique_views, 'unique views')
+    message = 'unique views'
+    results_generator(@unique_views, message)
+    generate_csv(@unique_views, message) if @csv
   end
 
   private
@@ -89,6 +96,16 @@ class LogSummary
     # message should be a string to give context of data
     result.each do |key, val|
       puts "#{key} #{val} #{message}"
+    end
+  end
+
+  def generate_csv(hash_store, message)
+    # hash_store are the soted data message is just for a nice column header
+    CSV.open("#{message}.csv", 'wb') do |csv|
+      csv << ['url', message]
+      hash_store.each do |item|
+        csv << item
+      end
     end
   end
 end
